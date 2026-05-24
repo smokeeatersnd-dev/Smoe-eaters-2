@@ -1,0 +1,117 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+        (request.auth.token.email == "rhart13fox@gmail.com" && request.auth.token.email_verified == true)
+      );
+    }
+
+    // ===============================================================
+    // Validation Blueprints
+    // ===============================================================
+
+    function isValidState(data) {
+      // Very broad validation for AppState as it contains nested blobs
+      return data.keys().hasAll(['tasks', 'checks', 'inventory', 'stock']) &&
+             data.tasks is map &&
+             data.checks is map &&
+             data.inventory is map &&
+             data.stock is map;
+    }
+
+    function isValidAlert(data) {
+      return data.item is string &&
+             data.item.size() <= 200 &&
+             data.targetEmail is string &&
+             data.targetEmail.size() <= 100 &&
+             (data.createdAt == request.time || !data.keys().hasAll(['createdAt']));
+    }
+
+    function isValidUser(data) {
+      return data.id is string &&
+             data.name is string &&
+             data.role in ['admin', 'manager', 'employee', 'support'];
+    }
+
+    function isValidPatron(data) {
+      return data.id is string &&
+             data.id.size() <= 128 &&
+             data.name is string &&
+             data.name.size() <= 100 &&
+             (!data.keys().hasAll(['flavorPreference']) || (data.flavorPreference is string && data.flavorPreference.size() <= 100)) &&
+             (!data.keys().hasAll(['savedRecipeIds']) || data.savedRecipeIds is list) &&
+             (!data.keys().hasAll(['ratings']) || data.ratings is map) &&
+             (!data.keys().hasAll(['orders']) || data.orders is list);
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    match /system/state {
+      // Allow any guest patron or authenticated staff to read the shared state
+      allow read: if true;
+      allow write: if isAuthenticated() && isValidState(incoming());
+    }
+
+    match /pending_alerts/{alertId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated() && isValidAlert(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      // Only admins or the user themselves can update their profile. 
+      // But only admins can change roles (Tiered access).
+      allow write: if isAuthenticated() && (
+        isValidUser(incoming()) && (
+          (isAdmin()) || 
+          (request.auth.uid == userId && incoming().role == existing().role)
+        )
+      );
+    }
+
+    match /patrons/{patronId} {
+      // Anyone can get their own patron profile during login or sync, or for general bartender display validation.
+      // List queries are disabled to prevent bulk scraping of guest accounts.
+      allow get: if true;
+      allow list: if false;
+      allow write: if isValidPatron(incoming());
+    }
+
+    match /table_alerts/{alertId} {
+      // Allows guest patrons on their phones to create alerts (calls/orders), and bartenders to read/resolve them.
+      allow read, write: if true;
+    }
+  }
+}

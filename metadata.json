@@ -1,0 +1,11 @@
+{
+  "name": "Remix: Smoke Eaters Pro",
+  "description": "Integrated management system for Smoke Eaters - tasks, inventory, recipes, calendar, and staff notifications.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

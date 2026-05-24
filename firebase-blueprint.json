@@ -1,0 +1,140 @@
+{
+  "entities": {
+    "Task": {
+      "title": "Task",
+      "description": "A management task",
+      "type": "object",
+      "properties": {
+        "n": { "type": "string", "description": "Task name" },
+        "f": { "type": "string", "enum": ["daily", "weekly", "monthly"], "description": "Frequency" }
+      },
+      "required": ["n", "f"]
+    },
+    "Employee": {
+      "title": "Employee",
+      "description": "An employee of the establishment",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "pin": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "manager", "employee"] }
+      },
+      "required": ["id", "name", "pin", "role"]
+    },
+    "Recipe": {
+      "title": "Recipe",
+      "description": "A drink recipe",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "ingredients": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "item": { "type": "string" },
+              "amount": { "type": "string" }
+            }
+          }
+        },
+        "instructions": { "type": "string" },
+        "category": { "type": "string" },
+        "cost": { "type": "number" }
+      },
+      "required": ["id", "name", "ingredients", "instructions", "category"]
+    },
+    "User": {
+      "title": "User",
+      "description": "A system user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "manager", "employee", "support"] }
+      },
+      "required": ["id", "name", "role"]
+    },
+    "AppState": {
+      "title": "AppState",
+      "description": "The complete state of the Smoke Eaters manager",
+      "type": "object",
+      "properties": {
+        "tasks": {
+          "type": "object",
+          "properties": {
+            "opening": { "type": "array", "items": { "$ref": "Task" } },
+            "closing": { "type": "array", "items": { "$ref": "Task" } }
+          }
+        },
+        "checks": {
+          "type": "object",
+          "additionalProperties": { "type": "boolean" }
+        },
+        "inventory": { "type": "object" },
+        "stock": { "type": "object" },
+        "tills": { "type": "array" },
+        "gaming": { "type": "array" },
+        "invLogs": { "type": "array" },
+        "taskLogs": { "type": "array" },
+        "employees": { "type": "array", "items": { "$ref": "Employee" } },
+        "recipes": { "type": "array", "items": { "$ref": "Recipe" } },
+        "orderLogs": { "type": "array" },
+        "totalInventoryValue": { "type": "number" },
+        "distributorMetadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "orderDay": { "type": "string" },
+              "frequency": { "type": "string" },
+              "repName": { "type": "string" },
+              "email": { "type": "string" },
+              "phone": { "type": "string" },
+              "paymentTerms": { "type": "string" },
+              "deliverySchedule": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "PatronAccount": {
+      "title": "PatronAccount",
+      "description": "A saved patron profile with custom drinks and history",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "flavorPreference": { "type": "string" },
+        "savedRecipeIds": { "type": "array", "items": { "type": "string" } },
+        "ratings": { "type": "object" },
+        "orders": { "type": "array" },
+        "pin": { "type": "string" },
+        "authProvider": { "type": "string", "enum": ["google", "pin"] },
+        "tableNumber": { "type": "string" },
+        "seatNumber": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "name"]
+    }
+  },
+  "firestore": {
+    "/system/state": {
+      "schema": "AppState",
+      "description": "The shared state of the application"
+    },
+    "/pending_alerts/{alertId}": {
+      "schema": "object",
+      "description": "Queue for stock alerts to be sent daily at 2 AM"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and roles"
+    },
+    "/patrons/{patronId}": {
+      "schema": "PatronAccount",
+      "description": "Loyalty patron and lounge accounts with saved drinks/orders"
+    }
+  }
+}

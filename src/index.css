@@ -1,0 +1,102 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@layer base {
+  html, body, #root {
+    background-color: #0c0c0c !important;
+    color: #f2f2f2;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100vw;
+    width: 100%;
+  }
+
+  @media print {
+    body {
+      background: white !important;
+      color: black !important;
+    }
+    
+    .no-print, 
+    nav, 
+    aside, 
+    button:not(.print-visible), 
+    .fixed:not(.print-container),
+    .absolute:not(.print-container) {
+      display: none !important;
+    }
+
+    main {
+      margin: 0 !important;
+      padding: 0 !important;
+      max-width: none !important;
+      width: 100% !important;
+    }
+
+    /* Target specific components if needed, but standard tailwind print utilities are also available */
+    .bg-\[\#181818\] {
+      background: white !important;
+      border-color: #eee !important;
+    }
+
+    .text-white {
+      color: black !important;
+    }
+
+    .text-gray-400, .text-gray-500, .text-gray-600 {
+      color: #333 !important;
+    }
+
+    .border-\[\#333\], .border-white\/10 {
+      border-color: #ddd !important;
+    }
+
+    /* Ensure calendar is visible */
+    .grid {
+      display: grid !important;
+    }
+
+    .aspect-square {
+      aspect-ratio: auto !important;
+      min-height: 80px !important;
+    }
+
+    .rounded-xl, .rounded-\[2rem\], .rounded-2xl {
+      border-radius: 0 !important;
+    }
+
+    .shadow-2xl, .shadow-xl, .shadow-lg {
+      shadow: none !important;
+      box-shadow: none !important;
+    }
+
+    .print-break-after {
+      page-break-after: always;
+    }
+  }
+}
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #444;
+  }
+  
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
